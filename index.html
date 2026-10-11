@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>صائد الماسك 🎭</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+        width: 100%;
+        height: 100%;
+        background: #070b1a;
+        overflow: hidden;
+        font-family: Georgia, 'Times New Roman', serif;
+    }
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+    }
+    #overlay {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse at center, #101a3a 0%, #070b1a 70%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        z-index: 10;
+        user-select: none;
+        -webkit-user-select: none;
+        transition: opacity 0.9s ease;
+        padding: 20px;
+    }
+    #overlay.hidden { opacity: 0; pointer-events: none; }
+    #overlay .big {
+        font-size: clamp(32px, 8vw, 66px);
+        color: #eaf0ff;
+        text-shadow: 0 0 18px #4d6bff, 0 0 55px #1a2a8a;
+        letter-spacing: 2px;
+        text-align: center;
+    }
+    #overlay .sub {
+        font-size: clamp(16px, 4vw, 26px);
+        color: #9fb4ff;
+        text-shadow: 0 0 14px #24389a;
+        text-align: center;
+    }
+    #startBtn {
+        font-size: clamp(16px, 3.5vw, 22px);
+        color: #0a0f24;
+        background: linear-gradient(135deg, #8fa5ff, #4d5fe0);
+        border: none;
+        border-radius: 30px;
+        padding: 13px 46px;
+        cursor: pointer;
+        box-shadow: 0 0 18px rgba(100,130,255,0.6);
+        transition: transform 0.15s ease;
+    }
+    #startBtn:active { transform: scale(0.95); }
+    #overlay .hint {
+        font-size: clamp(13px, 2.6vw, 18px);
+        color: #7c90e8;
+        text-shadow: 0 0 12px #1a2a6a;
+        animation: pulse 1.6s ease-in-out infinite;
+        text-align: center;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 1; }
+    }
+    #musicBtn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        border: 1px solid rgba(140,160,255,0.7);
+        background: rgba(16,24,58,0.65);
+        color: #fff;
+        font-size: 24px;
+        line-height: 1;
+        cursor: pointer;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 14px rgba(90,120,255,0.55);
+    }
+    #contactBtn {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,120,170,0.8);
+        background: radial-gradient(circle at 30% 30%, rgba(255,90,150,0.35), rgba(90,20,50,0.75));
+        color: #ffd6e6;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        box-shadow: 0 0 18px rgba(255,90,150,0.6);
+        line-height: 1.2;
+        padding: 4px;
+        text-align: center;
+        transition: transform 0.15s ease;
+    }
+    #contactBtn:active { transform: translateX(-50%) scale(0.92); }
+    #contactBtn .ico { font-size: 20px; }
+    .hidden { display: none !important; }
+    #contactModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 30;
+        padding: 20px;
+    }
+    #contactModal .box {
+        background: rgba(14,20,46,0.97);
+        border: 1px solid rgba(140,160,255,0.5);
+        border-radius: 20px;
+        padding: 28px 24px;
+        width: min(88vw, 340px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 0 30px rgba(90,120,255,0.35);
+    }
+    #contactModal .box .title {
+        color: #eaf0ff;
+        font-size: clamp(18px, 4.5vw, 24px);
+        text-shadow: 0 0 14px #4d6bff;
+        text-align: center;
+    }
+    .devBtn {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 14px 10px;
+        font-size: clamp(17px, 4.2vw, 22px);
+        color: #fff;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        display: block;
+        transition: transform 0.15s ease;
+    }
+    .devBtn:active { transform: scale(0.96); }
+    .devBtn.subarua { background: linear-gradient(135deg, #2f7fe0, #123a6e); box-shadow: 0 0 16px rgba(60,150,255,0.5); }
+    .devBtn.barakat { background: linear-gradient(135deg, #e0457b, #6e1238); box-shadow: 0 0 16px rgba(255,90,150,0.5); }
+    #closeModal {
+        background: none;
+        border: 1px solid rgba(150,170,220,0.4);
+        color: #a8b4d8;
+        border-radius: 20px;
+        padding: 8px 26px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<audio id="song" loop preload="auto">
+    <source src="https://files.catbox.moe/lm727k.mp3" type="audio/mpeg">
+    <source src="song.mp3" type="audio/mpeg">
+</audio>
+<canvas id="scene"></canvas>
+
+<div id="overlay">
+    <div class="big">&#128008; صائد الماسك &#129327;</div>
+    <div class="sub">قطة كيوت لابسة ماسك... وبتدور على حد معين</div>
+    <button id="startBtn">&#128064; ابدأ</button>
+    <div class="hint">شغل الصوت عالي شوية &#9834;</div>
+</div>
+
+<button id="musicBtn" class="hidden" title="تشغيل / إيقاف الموسيقى">&#128266;</button>
+<button id="contactBtn" class="hidden" title="تواصل مع الإدارة"><span class="ico">&#128140;</span><span>الإدارة</span></button>
+
+<div id="contactModal" class="hidden">
+    <div class="box">
+        <div class="title">&#128172; تواصل مع الإدارة</div>
+        <a class="devBtn subarua" href="https://wa.me/201147831048" target="_blank" rel="noopener">&#128241; 𝑺𝑼𝑩𝑨𝑹𝑼𝑨</a>
+        <a class="devBtn barakat" href="https://wa.me/201031910149" target="_blank" rel="noopener">&#128241; 𝑩𝒂𝒓𝒂𝒌𝒂𝒕</a>
+        <button id="closeModal">إغلاق</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    var canvas       = document.getElementById("scene");
+    var ctx          = canvas.getContext("2d");
+    var overlay      = document.getElementById("overlay");
+    var song         = document.getElementById("song");
+    var musicBtn     = document.getElementById("musicBtn");
+    var contactBtn   = document.getElementById("contactBtn");
+    var startBtn     = document.getElementById("startBtn");
+    var contactModal = document.getElementById("contactModal");
+    var closeModal   = document.getElementById("closeModal");
+
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = -1, H = -1;
+
+    function syncSize() {
+        var rect = canvas.getBoundingClientRect();
+        var vw = Math.round(rect.width)  || window.innerWidth  || document.documentElement.clientWidth  || 360;
+        var vh = Math.round(rect.height) || window.innerHeight || document.documentElement.clientHeight || 640;
+        if (vw !== W || vh !== H) {
+            W = vw;
+            H = vh;
+            canvas.width  = Math.floor(W * dpr);
+            canvas.height = Math.floor(H * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+    }
+    window.addEventListener("resize", syncSize);
+    window.addEventListener("orientationchange", syncSize);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", syncSize);
+    }
+    setTimeout(syncSize, 300);
+    setTimeout(syncSize, 1200);
+
+    var stars = [];
+    var hearts = [];
+    var sparkles = [];
+    var grass = [];
+    var shootingStars = [];
+    var nextShoot = 0;
+    var started = false;
+    var startTime = 0;
+
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+
+    function initScene() {
+        stars = [];
+        hearts = [];
+        sparkles = [];
+        grass = [];
+        shootingStars = [];
+        nextShoot = performance.now() + 2500;
+
+        for (var i = 0; i < 110; i++) {
+            stars.push({
+                x: Math.random() * W,
+                y: Math.random() * H * 0.7,
+                r: rnd(0.6, 2.2),
+                tw: rnd(0, Math.PI * 2),
+                twSpeed: rnd(0.02, 0.07)
+            });
+        }
+        for (var j = 0; j < 24; j++) {
+            hearts.push({
+                x: Math.random() * W,
+                y: H + rnd(20, 300),
+                size: rnd(14, 30),
+                speed: rnd(0.5, 1.4),
+                sway: rnd(0, Math.PI * 2),
+                swaySpeed: rnd(0.01, 0.03),
+                alpha: rnd(0.4, 0.9)
+            });
+        }
+        for (var k = 0; k < 26; k++) {
+            sparkles.push({
+                x: rnd(0, W),
+                y: rnd(0, H),
+                r: rnd(1, 2.4),
+                tw: rnd(0, Math.PI * 2),
+                twSpeed: rnd(0.03, 0.09),
+                drift: rnd(-0.2, 0.2)
+            });
+        }
+        for (var g = 0; g < 40; g++) {
+            grass.push({
+                x: Math.random() * W,
+                y: H - rnd(0, H * 0.1),
+                h: rnd(12, 30),
+                sway: rnd(0, Math.PI * 2),
+                swaySpeed: rnd(0.015, 0.04),
+                color: Math.random() < 0.5 ? "#1e5c38" : "#2a7548"
+            });
+        }
+    }
+
+    function drawWeb(cx, cy, radius) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(220,230,255,0.28)";
+        ctx.lineWidth = 1.2;
+        var spokes = 7;
+        for (var i = 0; i < spokes; i++) {
+            var a = (Math.PI / (spokes - 1)) * i;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius);
+            ctx.stroke();
+        }
+        for (var ring = 1; ring <= 4; ring++) {
+            var rr = radius * ring / 4;
+            ctx.beginPath();
+            for (var s = 0; s <= spokes; s++) {
+                var a2 = (Math.PI / (spokes - 1)) * s;
+                var sag = rr * (1 - 0.06 * Math.sin(s * 2.3));
+                var px = cx + Math.cos(a2) * sag;
+                var py = cy + Math.sin(a2) * sag;
+                if (s === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function drawBackground(elapsed) {
+        var bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, "#0d1430");
+        bg.addColorStop(0.7, "#101a3a");
+        bg.addColorStop(1, "#1a1030");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        for (var i = 0; i < stars.length; i++) {
+            var s = stars[i];
+            s.tw += s.twSpeed;
+            var a = 0.25 + 0.75 * Math.abs(Math.sin(s.tw));
+            ctx.fillStyle = "rgba(220,230,255," + a.toFixed(3) + ")";
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        drawWeb(10, 10, Math.min(W, H) * 0.22);
+        drawWeb(W - 10, H * 0.3, Math.min(W, H) * 0.14);
+
+        ctx.fillStyle = "rgba(20,26,52,0.95)";
+        ctx.beginPath();
+        ctx.ellipse(W / 2, H + H * 0.05, W * 0.75, H * 0.16, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (var g = 0; g < grass.length; g++) {
+            var gr = grass[g];
+            gr.sway += gr.swaySpeed;
+            var bend = Math.sin(gr.sway) * 4;
+            ctx.strokeStyle = gr.color;
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(gr.x, gr.y);
+            ctx.quadraticCurveTo(gr.x + bend * 0.5, gr.y - gr.h * 0.6, gr.x + bend, gr.y - gr.h);
+            ctx.stroke();
+        }
+
+        var moonX = W * 0.82, moonY = H * 0.14, moonR = Math.min(W, H) * 0.07;
+        var mg = ctx.createRadialGradient(moonX, moonY, moonR * 0.3, moonX, moonY, moonR * 2.2);
+        mg.addColorStop(0, "rgba(255,246,214,0.95)");
+        mg.addColorStop(0.35, "rgba(255,240,200,0.5)");
+        mg.addColorStop(1, "rgba(255,240,200,0)");
+        ctx.fillStyle = mg;
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonR * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fdf3d0";
+        ctx.beginPath();
+        ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawShootingStar(ss) {
+        var grad = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.vx * 14, ss.y - ss.vy * 14);
+        grad.addColorStop(0, "rgba(255,255,255," + ss.life.toFixed(3) + ")");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(ss.x, ss.y);
+        ctx.lineTo(ss.x - ss.vx * 14, ss.y - ss.vy * 14);
+        ctx.stroke();
+    }
+
+    function drawHeart(h) {
+        ctx.save();
+        ctx.translate(h.x, h.y);
+        ctx.rotate(Math.sin(h.sway) * 0.2);
+        ctx.globalAlpha = h.alpha;
+        ctx.font = h.size + "px serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("\u{2764}\u{FE0F}", 0, 0);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+    }
+
+    function drawCat(cx, cy, unit, elapsed) {
+        var breathe = Math.sin(elapsed * 0.0022) * unit * 0.05;
+        var blinkPhase = elapsed % 3400;
+        var blink = 1;
+        if (blinkPhase > 3200) {
+            var bp = (blinkPhase - 3200) / 200;
+            blink = Math.max(0.08, 1 - Math.sin(bp * Math.PI) * 0.95);
+        }
+        var earTwitch = Math.sin(elapsed * 0.0013);
+        var earJerk = (earTwitch > 0.965) ? Math.sin(elapsed * 0.08) * 0.12 : 0;
+
+        ctx.save();
+        ctx.translate(cx, cy + breathe * 0.4);
+
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(0, unit * 2.6, unit * 1.9 + breathe, unit * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        var tailWave = Math.sin(elapsed * 0.004) * unit * 0.6;
+        var tailWave2 = Math.sin(elapsed * 0.004 + 1.2) * unit * 0.4;
+        ctx.strokeStyle = "#9aa3b8";
+        ctx.lineWidth = unit * 0.45;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(unit * 1.5, unit * 1.4);
+        ctx.quadraticCurveTo(unit * 2.9, unit * 0.7 + tailWave, unit * 2.7, unit * -0.5 + tailWave);
+        ctx.quadraticCurveTo(unit * 2.6, unit * -1.1 + tailWave2, unit * 2.2, unit * -1.3 + tailWave2);
+        ctx.stroke();
+        ctx.strokeStyle = "#7d869c";
+        ctx.lineWidth = unit * 0.45;
+        ctx.beginPath();
+        ctx.arc(unit * 2.2, unit * -1.35 + tailWave2, unit * 0.18, 0, Math.PI * 2);
+        ctx.stroke();
+
+        var bodyGrad = ctx.createLinearGradient(0, 0, 0, unit * 2.4);
+        bodyGrad.addColorStop(0, "#b8c0d4");
+        bodyGrad.addColorStop(1, "#8d97ae");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, unit * 1.3, unit * 1.35 + breathe, unit * 1.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#eef1f7";
+        ctx.beginPath();
+        ctx.ellipse(0, unit * 1.7, unit * 0.8 + breathe * 0.5, unit * 0.95, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(-unit * 1.05, -unit * 1.3);
+        ctx.rotate(-0.12 - earJerk);
+        ctx.fillStyle = "#b8c0d4";
+        ctx.beginPath();
+        ctx.moveTo(-unit * 0.45, unit * 0.6);
+        ctx.lineTo(-unit * 0.05, -unit * 1.0);
+        ctx.lineTo(unit * 0.8, unit * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#f7b8c8";
+        ctx.beginPath();
+        ctx.moveTo(-unit * 0.28, unit * 0.45);
+        ctx.lineTo(-unit * 0.03, -unit * 0.7);
+        ctx.lineTo(unit * 0.52, unit * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(unit * 1.05, -unit * 1.3);
+        ctx.rotate(0.12 + earJerk);
+        ctx.fillStyle = "#b8c0d4";
+        ctx.beginPath();
+        ctx.moveTo(unit * 0.45, unit * 0.6);
+        ctx.lineTo(unit * 0.05, -unit * 1.0);
+        ctx.lineTo(-unit * 0.8, unit * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#f7b8c8";
+        ctx.beginPath();
+        ctx.moveTo(unit * 0.28, unit * 0.45);
+        ctx.lineTo(unit * 0.03, -unit * 0.7);
+        ctx.lineTo(-unit * 0.52, unit * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = "#b8c0d4";
+        ctx.beginPath();
+        ctx.arc(0, -unit * 0.55, unit * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#1c2130";
+        ctx.beginPath();
+        ctx.roundRect(-unit * 1.3, -unit * 1.15, unit * 2.6, unit * 0.75, unit * 0.35);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-unit * 1.28, -unit * 0.85);
+        ctx.quadraticCurveTo(-unit * 1.7, -unit * 0.4, -unit * 1.5, unit * 0.1);
+        ctx.lineTo(-unit * 1.15, -unit * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(unit * 1.28, -unit * 0.85);
+        ctx.quadraticCurveTo(unit * 1.7, -unit * 0.4, unit * 1.5, unit * 0.1);
+        ctx.lineTo(unit * 1.15, -unit * 0.15);
+        ctx.closePath();
+        ctx.fill();
+
+        var shine = (Math.sin(elapsed * 0.0018) + 1) / 2;
+        ctx.strokeStyle = "rgba(255,255,255," + (0.15 + shine * 0.35).toFixed(3) + ")";
+        ctx.lineWidth = unit * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(-unit * 0.9, -unit * 1.05);
+        ctx.quadraticCurveTo(0, -unit * 1.22, unit * 0.9, -unit * 1.05);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(-unit * 0.55, -unit * 0.78, unit * 0.3, unit * 0.24 * blink, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(unit * 0.55, -unit * 0.78, unit * 0.3, unit * 0.24 * blink, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#2a3145";
+        ctx.beginPath();
+        ctx.arc(-unit * 0.5, -unit * 0.78, unit * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(unit * 0.6, -unit * 0.78, unit * 0.12, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (blink < 0.5) {
+            ctx.strokeStyle = "#2a3145";
+            ctx.lineWidth = unit * 0.07;
+            ctx.beginPath();
+            ctx.moveTo(-unit * 0.82, -unit * 0.78);
+            ctx.quadraticCurveTo(-unit * 0.55, -unit * 0.66, -unit * 0.28, -unit * 0.78);
+            ctx.moveTo(unit * 0.28, -unit * 0.78);
+            ctx.quadraticCurveTo(unit * 0.55, -unit * 0.66, unit * 0.82, -unit * 0.78);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = "#f78ba4";
+        ctx.beginPath();
+        ctx.moveTo(0, -unit * 0.25);
+        ctx.lineTo(-unit * 0.14, -unit * 0.05);
+        ctx.lineTo(unit * 0.14, -unit * 0.05);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(40,45,60,0.8)";
+        ctx.lineWidth = unit * 0.06;
+        ctx.beginPath();
+        ctx.moveTo(-unit * 0.12, 0);
+        ctx.quadraticCurveTo(-unit * 0.3, unit * 0.2, -unit * 0.5, unit * 0.12);
+        ctx.moveTo(unit * 0.12, 0);
+        ctx.quadraticCurveTo(unit * 0.3, unit * 0.2, unit * 0.5, unit * 0.12);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255,140,170,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(-unit * 0.85, -unit * 0.25, unit * 0.22, unit * 0.14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(unit * 0.85, -unit * 0.25, unit * 0.22, unit * 0.14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(240,244,255,0.75)";
+        ctx.lineWidth = unit * 0.05;
+        for (var w = -1; w <= 1; w++) {
+            ctx.beginPath();
+            ctx.moveTo(-unit * 1.15, unit * 0.05 + w * unit * 0.16);
+            ctx.lineTo(-unit * 2.0, -unit * 0.05 + w * unit * 0.28);
+            ctx.moveTo(unit * 1.15, unit * 0.05 + w * unit * 0.16);
+            ctx.lineTo(unit * 2.0, -unit * 0.05 + w * unit * 0.28);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = "#b8c0d4";
+        ctx.beginPath();
+        ctx.ellipse(-unit * 0.85, unit * 0.85, unit * 0.42, unit * 0.62, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(unit * 0.85, unit * 0.85, unit * 0.42, unit * 0.62, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#8a6b42";
+        ctx.lineWidth = unit * 0.14;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-unit * 1.35, unit * 0.75);
+        ctx.lineTo(-unit * 2.35, unit * 1.75);
+        ctx.moveTo(unit * 1.35, unit * 0.75);
+        ctx.lineTo(unit * 2.35, unit * 1.75);
+        ctx.stroke();
+
+        var bw = Math.min(W * 0.86, unit * 8.2);
+        var bh = unit * 2.1;
+        var sway = Math.sin(elapsed * 0.0016) * 0.02;
+
+        ctx.save();
+        ctx.translate(0, unit * 4.15 + Math.sin(elapsed * 0.002) * unit * 0.08);
+        ctx.rotate(sway);
+
+        ctx.fillStyle = "#a1793f";
+        ctx.beginPath();
+        ctx.roundRect(-bw / 2, -bh / 2, bw, bh, unit * 0.25);
+        ctx.fill();
+        ctx.fillStyle = "#c49a58";
+        ctx.beginPath();
+        ctx.roundRect(-bw / 2 + unit * 0.12, -bh / 2 + unit * 0.12, bw - unit * 0.24, bh - unit * 0.24, unit * 0.2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(90,60,25,0.5)";
+        ctx.lineWidth = unit * 0.05;
+        ctx.beginPath();
+        ctx.moveTo(-bw / 2 + unit * 0.4, -bh / 2 + unit * 0.5);
+        ctx.lineTo(bw / 2 - unit * 0.4, -bh / 2 + unit * 0.5);
+        ctx.moveTo(-bw / 2 + unit * 0.4, bh / 2 - unit * 0.5);
+        ctx.lineTo(bw / 2 - unit * 0.4, bh / 2 - unit * 0.5);
+        ctx.stroke();
+
+        var nailL = Math.sin(elapsed * 0.003) * unit * 0.1;
+        ctx.fillStyle = "#5e4520";
+        ctx.beginPath();
+        ctx.arc(-bw / 2 + unit * 0.35, -bh / 2 + unit * 0.42 + nailL, unit * 0.07, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bw / 2 - unit * 0.35, -bh / 2 + unit * 0.42 - nailL, unit * 0.07, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = "bold " + (unit * 0.62) + "px Georgia, 'Times New Roman', serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#fff7e0";
+        ctx.shadowColor = "rgba(255,200,80,0.9)";
+        ctx.shadowBlur = unit * 0.5;
+        ctx.fillText("بدور على البنت اللي لابسة", 0, -unit * 0.42);
+        ctx.fillText("ماسك سبيد مان", 0, unit * 0.42);
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    function drawGlowText(text, x, y, size, alpha) {
+        if (alpha <= 0.004) return;
+        ctx.font = size + "px Georgia, 'Times New Roman', serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(120,150,255,0.95)";
+        ctx.shadowBlur = size;
+        ctx.fillStyle = "rgba(160,180,255," + (alpha * 0.9).toFixed(3) + ")";
+        ctx.fillText(text, x, y);
+        ctx.shadowBlur = size * 0.35;
+        ctx.fillStyle = "rgba(240,245,255," + alpha.toFixed(3) + ")";
+        ctx.fillText(text, x, y);
+        ctx.shadowBlur = 0;
+    }
+
+    function render() {
+        syncSize();
+        var now = performance.now();
+        var elapsed = now - startTime;
+
+        drawBackground(elapsed);
+
+        if (now > nextShoot) {
+            shootingStars.push({
+                x: rnd(W * 0.3, W * 0.95),
+                y: rnd(0, H * 0.25),
+                vx: -rnd(6, 10),
+                vy: rnd(2, 4),
+                life: 1
+            });
+            nextShoot = now + rnd(3500, 8000);
+        }
+        for (var ss = shootingStars.length - 1; ss >= 0; ss--) {
+            var star = shootingStars[ss];
+            star.x += star.vx;
+            star.y += star.vy;
+            star.life -= 0.012;
+            if (star.life <= 0 || star.x < -50) {
+                shootingStars.splice(ss, 1);
+            } else {
+                drawShootingStar(star);
+            }
+        }
+
+        for (var i = 0; i < hearts.length; i++) {
+            var h = hearts[i];
+            h.y -= h.speed;
+            h.sway += h.swaySpeed;
+            h.x += Math.sin(h.sway) * 0.7;
+            if (h.y < -40) { h.y = H + 40; h.x = Math.random() * W; }
+            drawHeart(h);
+        }
+
+        for (var k = 0; k < sparkles.length; k++) {
+            var sp = sparkles[k];
+            sp.tw += sp.twSpeed;
+            sp.y += sp.drift;
+            if (sp.y < -5) sp.y = H + 5;
+            if (sp.y > H + 5) sp.y = -5;
+            var sa = Math.abs(Math.sin(sp.tw));
+            ctx.fillStyle = "rgba(255,240,190," + (sa * 0.85).toFixed(3) + ")";
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, sp.r * (0.6 + sa * 0.6), 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        var unit = Math.min(W, H) * 0.085;
+        drawCat(W / 2, H * 0.34, unit, elapsed);
+
+        var bt = (elapsed - 900) / 1800;
+        if (bt > 0) {
+            if (bt > 1) bt = 1;
+            var alpha = bt * (0.8 + 0.2 * Math.sin(elapsed * 0.004));
+            drawGlowText("لو لقيتوها... قولولها اني مستني", W / 2, H * 0.055, Math.min(W, H) * 0.036, alpha);
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    function refreshMusicIcon() {
+        musicBtn.innerHTML = song.paused ? "&#128263;" : "&#128266;";
+    }
+    musicBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (song.paused) {
+            song.play().catch(function () {});
+        } else {
+            song.pause();
+        }
+        setTimeout(refreshMusicIcon, 100);
+    });
+    song.addEventListener("playing", refreshMusicIcon);
+    song.addEventListener("pause", refreshMusicIcon);
+
+    contactBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        contactModal.classList.remove("hidden");
+    });
+    closeModal.addEventListener("click", function () {
+        contactModal.classList.add("hidden");
+    });
+    contactModal.addEventListener("click", function (e) {
+        if (e.target === contactModal) {
+            contactModal.classList.add("hidden");
+        }
+    });
+
+    function start() {
+        if (started) return;
+        started = true;
+        overlay.classList.add("hidden");
+        musicBtn.classList.remove("hidden");
+        contactBtn.classList.remove("hidden");
+        song.volume = 1;
+        song.play().catch(function () {});
+        refreshMusicIcon();
+        syncSize();
+        initScene();
+        startTime = performance.now();
+        requestAnimationFrame(render);
+        setTimeout(syncSize, 500);
+        setTimeout(syncSize, 2000);
+    }
+
+    startBtn.addEventListener("click", start);
+})();
+</script>
+
+</body>
+</html>
